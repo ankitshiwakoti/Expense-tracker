@@ -16,6 +16,8 @@ import rateLimit from "express-rate-limit";
 import xssClean from "xss-clean";
 import Handlebars from 'handlebars'; 
 import helpers from './helpers/dataHelpers.js';
+import csrf from "csurf";
+import cookieParser from "cookie-parser";
 import "./config/passport.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -34,18 +36,21 @@ app.use(
     helmet.contentSecurityPolicy({
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "http://localhost:5000"], // Allow inline scripts if necessary
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"], // Allow inline styles if needed
-        imgSrc: ["'self'", "data:", "https://example.com"], // Allow images
-        fontSrc: ["'self'", "https://fonts.gstatic.com"], // Allow Google Fonts
+        scriptSrc: ["'self'", "'unsafe-inline'", "http://localhost:5000"], 
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        imgSrc: ["'self'", "data:", "https://example.com"], 
+        fontSrc: ["'self'", "https://fonts.gstatic.com"], 
         connectSrc: ["'self'", "ws://localhost:5000"],
       },
     })
-  ); // Security headers
+  ); 
 app.use(xssClean()); // Prevent XSS
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// app.use(cookieParser());
+// const csrfProtection = csrf({ cookie: true });
+// app.use(csrfProtection);
 
 app.use(
     session({
@@ -65,25 +70,13 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 
-
-
-
-
-
-// Rate Limiting (Prevents Brute-Force Attacks)
 export const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 5, // Limit login attempts to prevent brute-force
     message: "Too many login attempts, please try again later.",
 });
 
-// Session Management (Stores in MongoDB)
 
-
-// Passport Middleware
-
-// Register Handlebars Helpers before setting the engine
-// Import Handlebars directly
 Handlebars.registerHelper(helpers); // Register your helpers here
 
 app.engine("handlebars", engine({ defaultLayout: false,

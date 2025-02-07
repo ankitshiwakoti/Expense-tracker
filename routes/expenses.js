@@ -1,100 +1,3 @@
-// import express from 'express';
-// import Expense from '../models/Expense.js';
-
-// const router = express.Router();
-
-
-
-// router.get("/dashboard", isAuthenticated, async (req, res) => {
-//     try {
-//         const expenses = await Expense.find().sort({ date: -1 });
-//         res.render("dashboard", { expenses });
-//     } catch (err) {
-//         console.error('Dashboard route error:', err);
-//         res.status(500).render('error', { message: 'Error loading dashboard' });
-//     }
-// });
-
-// router.get("/summary", async (req, res) => {
-//     try {
-//         const expenses = await Expense.find();
-//         res.render("/summary", { expenses });
-//     } catch (err) {
-//         console.error('Summary route error:', err);
-//         res.status(500).render('error', { message: 'Error loading summary' });
-//     }
-// });
-
-
-// router.get("/add-expenses", (req, res) => {
-//     try{
-//         res.render("add-expenses");
-//     }
-//     catch(err){
-//         console.error('Add expenses route error:', err);
-//         res.status(500).render('error', { message: 'Error loading add expenses' });
-//     }
-    
-// });
-
-// router.post("/add-expenses", async (req, res) => {
-//     try {
-//         const { description, amount, category } = req.body;
-//         await new Expense({ description, amount, category }).save();
-//         console.log("Expense added successfully");
-//         res.redirect("/dashboard");
-//     } catch (err) {
-//         console.error('Add expense error:', err);
-//         res.status(500).render('error', { message: 'Error adding expense' });
-//     }
-// });
-
-
-
-// router.post("/delete-expense/:id", async (req, res) => {
-//     try {
-//         await Expense.findByIdAndDelete(req.params.id);
-//         res.redirect("/dashboard");
-//     } catch (err) {
-//         console.error('Delete expense error:', err);
-//         res.status(500).render('error', { message: 'Error deleting expense' });
-//     }
-// });
-
-// router.get("/edit/:id", async (req, res) => {
-//     try {
-//         const [expense, allExpenses] = await Promise.all([
-//             Expense.findById(req.params.id),
-//             Expense.find().sort({ date: -1 })
-//         ]);
-        
-//         res.render('dashboard', { 
-//             expenses: allExpenses,
-//             editMode: true,
-//             editExpense: expense
-//         });
-//     } catch (err) {
-//         res.status(500).render('error', { message: err.message });
-//     }
-//  });
-
-
-//  router.post("/edit-expense/:id", async (req, res) => {
-//     try {
-//         const { description, amount, category } = req.body;
-//         await Expense.findByIdAndUpdate(req.params.id, {
-//             description,
-//             amount: Number(amount),
-//             category
-//         });
-//         res.redirect("/dashboard");
-//     } catch (err) {
-//         res.status(500).render('error', { message: err.message });
-//     }
-//  });
-
-
-// export default router;
 
 import express from 'express';
 import Expense from '../models/Expense.js';
@@ -102,18 +5,18 @@ import requireAuth from '../helpers/authh.js';
 
 const router = express.Router();
 
-router.get("/dashboard",requireAuth,  async (req, res) => {
+router.get("/dashboard", requireAuth, async (req, res) => {
     try {
         // Fetch only the expenses of the logged-in user from session
         const expenses = await Expense.find({ user: req.session.userId }).sort({ date: -1 });
-        res.render("dashboard", { expenses:expenses, userId: req.session.userId });
+        res.render("dashboard", { expenses: expenses, userId: req.session.userId });
     } catch (err) {
         console.error('Dashboard route error:', err);
         res.status(500).render('error', { message: 'Error loading dashboard' });
     }
 });
 
-router.get("/summary",requireAuth, async (req, res) => {
+router.get("/summary", requireAuth, async (req, res) => {
     try {
         // Fetch only the expenses of the logged-in user from session
         const expenses = await Expense.find({ user: req.session.userId });
@@ -124,7 +27,7 @@ router.get("/summary",requireAuth, async (req, res) => {
     }
 });
 
-router.get("/add-expenses",requireAuth, (req, res) => {
+router.get("/add-expenses", requireAuth, (req, res) => {
     try {
         res.render("add-expenses");
     } catch (err) {
@@ -133,7 +36,7 @@ router.get("/add-expenses",requireAuth, (req, res) => {
     }
 });
 
-router.post("/add-expenses", requireAuth,async (req, res) => {
+router.post("/add-expenses", requireAuth, async (req, res) => {
     try {
         const { description, amount, category } = req.body;
 
@@ -154,7 +57,7 @@ router.post("/add-expenses", requireAuth,async (req, res) => {
     }
 });
 
-router.post("/delete-expense/:id",requireAuth, async (req, res) => {
+router.post("/delete-expense/:id", requireAuth, async (req, res) => {
     try {
         const expense = await Expense.findById(req.params.id);
 
@@ -171,7 +74,7 @@ router.post("/delete-expense/:id",requireAuth, async (req, res) => {
     }
 });
 
-router.get("/edit/:id", requireAuth,async (req, res) => {
+router.get("/edit/:id", requireAuth, async (req, res) => {
     try {
         const expense = await Expense.findById(req.params.id);
 
@@ -192,7 +95,7 @@ router.get("/edit/:id", requireAuth,async (req, res) => {
     }
 });
 
-router.post("/edit-expense/:id",requireAuth, async (req, res) => {
+router.post("/edit-expense/:id", requireAuth, async (req, res) => {
     try {
         const { description, amount, category } = req.body;
         const expense = await Expense.findById(req.params.id);
@@ -215,7 +118,7 @@ router.post("/edit-expense/:id",requireAuth, async (req, res) => {
     }
 });
 
-router.get("/monthly-summary",requireAuth, async (req, res) => {
+router.get("/monthly-summary", requireAuth, async (req, res) => {
     try {
         const currentDate = new Date();
         const year = currentDate.getFullYear();
@@ -226,8 +129,8 @@ router.get("/monthly-summary",requireAuth, async (req, res) => {
             console.log(req.session.userId, "id ayo ya ");
             return res.status(401).render('error', { message: 'User is not authenticated' });
         }
-            console.log(req.session.userId, "id ayo ya ");
-            console.log("chalyo")
+        console.log(req.session.userId, "id ayo ya ");
+        console.log("chalyo")
         // Find all expenses for the current user in the current month
         const monthlyExpenses = await Expense.find({
             user: req.session.userId,  // Ensure userId is in correct format
@@ -253,9 +156,9 @@ router.get("/monthly-summary",requireAuth, async (req, res) => {
         }));
 
         // Render the monthly-summary page with the data
-        res.render("monthly-summary", { 
+        res.render("monthly-summary", {
             userId: req.session.userId,
-            monthlyExpenses: formattedExpenses, 
+            monthlyExpenses: formattedExpenses,
             grandTotal,
             month,
             year
@@ -268,7 +171,7 @@ router.get("/monthly-summary",requireAuth, async (req, res) => {
 
 
 
-router.get("/yearly-summary",requireAuth, async (req, res) => {
+router.get("/yearly-summary", requireAuth, async (req, res) => {
     try {
         const currentDate = new Date();
         const year = currentDate.getFullYear(); // Get current year
@@ -306,9 +209,9 @@ router.get("/yearly-summary",requireAuth, async (req, res) => {
         }));
 
         // Render the yearly-summary page with the data
-        res.render("yearly-summary", { 
+        res.render("yearly-summary", {
             userId: req.session.userId,
-            yearlyExpenses: formattedExpenses, 
+            yearlyExpenses: formattedExpenses,
             grandTotal,
             year
         });
