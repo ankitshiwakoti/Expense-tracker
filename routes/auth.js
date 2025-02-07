@@ -6,16 +6,17 @@ import speakeasy from "speakeasy";
 import QRCode from "qrcode";
 import rateLimit from "express-rate-limit";
 import { body, validationResult } from "express-validator";
-import jwt from 'jsonwebtoken';
+
 
 const router = express.Router();
 
-const JWT_SECRET = process.env.JWT_SECRET ; 
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 5,
     message: "Too many login attempts, please try again later.",
+    headers: true, // Enables RateLimit headers
 });
 
 router.get("/register", (req, res) => {
@@ -26,12 +27,10 @@ router.get("/register", (req, res) => {
 
 // Signup Route with Validation
 router.post(
-    "/register", 
+    "/register",
     [
-        // Full name validation (not empty)
-        body("fullname").trim().notEmpty().withMessage("Full name is required"),
 
-        // Email validation (proper email format and check if already registered)
+        body("fullname").trim().notEmpty().withMessage("Full name is required"),
         body("email")
             .isEmail().withMessage("Please provide a valid email address")
             .normalizeEmail()
@@ -42,7 +41,7 @@ router.post(
                 }
             }),
 
-        // Password validation (minimum length, mix of characters, etc.)
+
         body("password")
             .isLength({ min: 8 }).withMessage("Password must be at least 8 characters long")
             .matches(/[a-z]/).withMessage("Password must contain at least one lowercase letter")
@@ -50,7 +49,7 @@ router.post(
             .matches(/\d/).withMessage("Password must contain at least one number")
             .matches(/[\W_]/).withMessage("Password must contain at least one special character"),
 
-        // Confirm password validation (custom check if passwords match)
+
         body("confirmpassword")
             .custom((value, { req }) => {
                 if (value !== req.body.password) {
@@ -58,21 +57,20 @@ router.post(
                 }
                 return true;
             })
-    ], 
+    ],
     async (req, res) => {
-        // Handle validation errors
+
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.render("register", {
                 errors: errors.array(),
-                formData: req.body, // Send back the data for pre-filled form
-                message: req.session.message || "", // Optional: Pass any messages stored in session
+                formData: req.body,
+                message: req.session.message || "",
             });
         }
         const { fullname, email, password } = req.body;
 
         try {
-            // Check if user already exists by email
             let user = await User.findOne({ email });
             if (user) {
                 return res.render("register", {
@@ -80,8 +78,6 @@ router.post(
                     formData: req.body,
                 });
             }
-
-            // Hash Password before saving
             const hashedPassword = await bcrypt.hash(password, 10);
 
             // Create new user
@@ -91,7 +87,7 @@ router.post(
                 password: hashedPassword,
             });
 
-            await user.save(); // Save the user to DB
+            await user.save();
             req.session.userId = user._id;
             // Enable 2FA immediately after registration
             const secret = speakeasy.generateSecret({ length: 20 });
@@ -103,18 +99,11 @@ router.post(
             QRCode.toDataURL(secret.otpauth_url, (err, imageUrl) => {
                 if (err) return res.status(500).json({ message: "Error generating QR Code" });
 
-                // Send the QR code to the user for them to scan
-                // res.render("register-success", {
-                //     message: "User registered successfully. Scan the QR code to enable 2FA.",
-                //     qr: imageUrl, // QR Code for the user to scan with Authenticator app
-                //     formData: req.body,
-                // });
 
-                    // Store the QR image URL in the session
-                    req.session.qrCode = imageUrl;
+                req.session.qrCode = imageUrl;
 
-                    // Redirect to the register-success route
-                    res.redirect("/register-success");
+                // Redirect to the register-success route
+                res.redirect("/register-success");
             });
         } catch (error) {
             console.error(error);
@@ -125,7 +114,7 @@ router.post(
 
 
 router.get("/login", (req, res) => {
-    res.render("login", { title: "Register" });
+    res.render("login", { title: "Register"});
 });
 
 
@@ -162,14 +151,14 @@ router.post("/login", authLimiter, (req, res, next) => {
 
 router.get("/register-success", (req, res) => {
     if (!req.session.qrCode) {
-        return res.redirect("/register"); 
+        return res.redirect("/register");
     }
     res.render("register-success", {
         message: "User registered successfully. Scan the QR code to enable 2FA.",
-        qr: req.session.qrCode, 
+        qr: req.session.qrCode,
     });
 
-   
+
     delete req.session.qrCode;
 });
 
@@ -194,9 +183,9 @@ router.post("/enable-2fa", async (req, res) => {
 
 // router.post("/verify-2fa", async (req, res) => {
 //     const { token } = req.body; // The OTP entered by the 
-   
+
 //     const userId = req.session.userId; // Retrieve user ID from session
-    
+
 
 //     if (!userId) {
 //         return res.status(400).render("register-success", { message: "User session expired. Please log in again." });
@@ -223,7 +212,7 @@ router.post("/enable-2fa", async (req, res) => {
 
 //             // Redirect to dashboard or another secured page
 //             console.log("2FA Verified Successfully");
-        
+
 //             return res.redirect("/dashboard");
 //         } else {
 //             return res.render("verify-2fa", { message: "Invalid or expired OTP. Please try again." });
@@ -235,7 +224,7 @@ router.post("/enable-2fa", async (req, res) => {
 // });
 router.post("/verify-2fa", async (req, res) => {
     const { token } = req.body; // The OTP entered by the user
-    
+
     const userId = req.session.userId; // Retrieve user ID from session
     const isPasswordReset = req.session.isPasswordReset || false; // Check if it's a password reset request
 
@@ -254,7 +243,7 @@ router.post("/verify-2fa", async (req, res) => {
         const verified = speakeasy.totp.verify({
             secret: user.twoFactorSecret,
             encoding: "base32",
-            token, 
+            token,
             window: 1,
         });
 
@@ -337,7 +326,7 @@ router.post('/reset-password', async (req, res) => {
         }
 
         // Hash and update password
-       
+
         const hashedPassword = await bcrypt.hash(password, 10);
         user.password = hashedPassword;
         await user.save();

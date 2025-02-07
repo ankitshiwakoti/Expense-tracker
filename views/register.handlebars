@@ -25,6 +25,7 @@
             {{/if}}
 
             <form id="registerForm" action="/register" method="POST">
+            {{!-- <input type="hidden" name="_csrf" value="{{csrfToken}}"> --}}
                 <label for="fullname">Full Name</label>
                 <input type="text" id="fullname" name="fullname" value="{{formData.fullname}}" required placeholder="Your Full Name">
                 
